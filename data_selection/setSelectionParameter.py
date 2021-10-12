@@ -11,3 +11,13 @@ def set_integratedDataInfo(start, end, partial_dataset_type):
                      {"db_name":"OUTDOOR_AIR","measurement":"seoul","start":str(start),"end":str(end)}]}
         
     return intDataInfo
+
+def set_integratedDataInfoByDBSet(start, end, db_set):
+    for db_index, db_one in enumerate(db_set):
+        db_set[db_index]['start'] = start
+        db_set[db_index]['end'] = end
+    intDataInfo ={}
+    intDataInfo["db_info"] = db_set
+    return intDataInfo
+
+
