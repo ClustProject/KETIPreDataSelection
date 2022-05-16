@@ -20,14 +20,8 @@ class CleanFeatureData:
             "removeDuplication":{"flag":True},
             "staticFrequency":{"flag":True, "frequency":self.resample_freq}
         }
-        self.outlier_param  = {
-            "certainErrorToNaN":{"flag":True},
-            "unCertainErrorToNaN":{
-                "flag":False,
-                "param":{"neighbor": 0.5}
-            },
-            "data_type":"air"
-        }
+        self.CertainParam= {'flag': True}
+
         self.imputation_param = {
             "serialImputation":{
                 "flag":True,
@@ -35,7 +29,48 @@ class CleanFeatureData:
                 "totalNonNanRatio":70
             }
         }
-        
+
+    def getMultipleCleanDataSetsByDF(self, dataSet, NanInfoForCleanData) :
+        """
+        This funtion can work by only num type of NaNInfoForCleanData
+        :param dataSet: input Data to be handled
+        :type dataSet: dictionary
+        :param NanInfoForCleanData: selection condition
+        :type NanInfoForCleanData: dictionary
+        :param duration:  duration, if set duration, make data with full duration, default=None
+        :type duration: dictionary
+
+        example:
+        >>> NanInfoForCleanData = {'type':'num', 'ConsecutiveNanLimit':1, 'totalNaNLimit':10}
+
+        :returns: self.refinedDataSet, self.FilteredImputedDataSet
+        :rtype: 
+        """
+
+        self.refinedDataSet={}
+        self.FilteredImputedDataSet = {}
+
+        ms_list = dataSet.keys()
+        for ms_name in ms_list:
+            data = dataSet[ms_name]
+            from KETIPrePartialDataPreprocessing.data_preprocessing import DataPreprocessing
+            if len(data)>0:
+                refinedData = DataPreprocessing().get_refinedData(data, self.refine_param)
+                self.refinedDataSet[ms_name] = refinedData
+                from KETIPrePartialDataPreprocessing.error_detection.errorToNaN import errorToNaN 
+                datawithMoreCertainNaN = errorToNaN().getDataWithCertainNaN(refinedData, self.CertainParam)
+                totalNanRowCount = datawithMoreCertainNaN.isnull().any(axis=1).sum()
+                if totalNanRowCount < NanInfoForCleanData['totalNaNLimit']:
+                    consecutiveNanCountMap = datawithMoreCertainNaN.isnull().any(axis=1).astype(int).groupby(datawithMoreCertainNaN.notnull().any(axis=1).astype(int).cumsum()).cumsum()
+                    ConsecutiveNanLimitNum = NanInfoForCleanData['ConsecutiveNanLimit']
+                    if (consecutiveNanCountMap > ConsecutiveNanLimitNum).any():
+                        pass
+                    else:
+                        imputedData = DataPreprocessing().get_imputedData(datawithMoreCertainNaN, self.imputation_param)
+                        self.FilteredImputedDataSet[ms_name] = imputedData     
+                     
+        return self.refinedDataSet, self.FilteredImputedDataSet
+
 
     def getMultipleCleanDataSetsByFeature(self, dataSet, NanInfoForCleanData, duration=None) :
         """
@@ -168,10 +203,10 @@ class CleanFeatureData:
             #1. Preprocessing (Data Refining/Static Frequency/OutlierDetection)
             MDP = data_preprocessing.DataPreprocessing()
             refined_data = MDP.get_refinedData(data, self.refine_param)
-            datawithMoreCertainNaN, datawithMoreUnCertainNaN = MDP.get_errorToNaNData(refined_data, self.outlier_param)
-            data = datawithMoreUnCertainNaN
+            from KETIPrePartialDataPreprocessing.error_detection.errorToNaN import errorToNaN 
+            datawithMoreCertainNaN = errorToNaN().getDataWithCertainNaN(refined_data, self.CertainParam)
 
-        return refined_data, datawithMoreUnCertainNaN
+        return refined_data, datawithMoreCertainNaN
 
         
     # self.query_start_time, self.query_end_time 문제 이슈
