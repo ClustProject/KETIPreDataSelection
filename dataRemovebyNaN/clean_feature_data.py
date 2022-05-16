@@ -198,7 +198,7 @@ class CleanFeatureData:
         :rtype: dataFrame
         """
         refined_data = pd.DataFrame()
-        datawithMoreUnCertainNaN = pd.DataFrame()
+        datawithMoreCertainNaN = pd.DataFrame()
         if len(data)>0:
             #1. Preprocessing (Data Refining/Static Frequency/OutlierDetection)
             MDP = data_preprocessing.DataPreprocessing()
