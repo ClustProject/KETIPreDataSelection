@@ -168,10 +168,10 @@ class CleanFeatureData:
         DRN = data_remove_byNaN.DataRemoveByNaNStatus()
         NaNRemovedData = DRN.removeNaNData(DataWithMoreNaN, NanInfoForCleanData)
         ImputedData = NaNRemovedData.copy()
-        
+              
         for feature in self.feature_list:
             finalFlag[feature] = -1
-            if (feature in data.columns) and (len(refinedData) >0): # refined_data 가 존재하고, 기존 data에 feature(column)이 속해 있을 때
+            if (feature in data.columns) and (len(data[feature]) >0) and ( data[feature].isna().sum() != len(data[feature])): # refined_data 가 존재하고, 기존 data에 feature(column)이 속해 있을 때
                 finalFlag[feature] = 0
                 if feature in NaNRemovedData.columns: # NaN의 limit을 넘은 컬럼 삭제 후, 컬럼이 남아있으면
                     NaNRemovedData_feature = NaNRemovedData[[feature]]
@@ -199,6 +199,7 @@ class CleanFeatureData:
         """
         refined_data = pd.DataFrame()
         datawithMoreCertainNaN = pd.DataFrame()
+        
         if len(data)>0:
             #1. Preprocessing (Data Refining/Static Frequency/OutlierDetection)
             MDP = data_preprocessing.DataPreprocessing()
@@ -215,7 +216,7 @@ class CleanFeatureData:
         
         start_time =duration['start_time']
         end_time = duration['end_time']
-        print("setDataWithSameDuration", start_time, end_time)
+        # print("setDataWithSameDuration", start_time, end_time)
         if len(data)>0:
             #2. Make Full Data(query Start ~ end) with NaN
             data.index = data.index.tz_localize(None) # 지역정보 없이 시간대만 가져오기
