@@ -25,8 +25,8 @@ class CleanFeatureData:
         self.imputation_param = {
             "serialImputation":{
                 "flag":True,
-                "imputation_method":[{"min":0,"max":15,"method":"linear" , "parameter":{}}],
-                "totalNonNanRatio":70
+                "imputation_method":[{"min":0,"max":10000,"method":"linear" , "parameter":{}}],
+                "totalNonNanRatio":5
             }
         }
 
