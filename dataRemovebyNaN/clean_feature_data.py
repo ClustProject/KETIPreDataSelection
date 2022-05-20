@@ -20,7 +20,7 @@ class CleanFeatureData:
             "removeDuplication":{"flag":True},
             "staticFrequency":{"flag":True, "frequency":self.resample_freq}
         }
-        self.CertainParam= {'flag': True}
+        self.certainParam= {"flag":True}
 
         self.imputation_param = {
             "serialImputation":{
@@ -53,20 +53,19 @@ class CleanFeatureData:
         ms_list = dataSet.keys()
         for ms_name in ms_list:
             data = dataSet[ms_name]
-            from KETIPrePartialDataPreprocessing.data_preprocessing import DataPreprocessing
-            if len(data)>0:
-                refinedData = DataPreprocessing().get_refinedData(data, self.refine_param)
-                self.refinedDataSet[ms_name] = refinedData
-                from KETIPrePartialDataPreprocessing.error_detection.errorToNaN import errorToNaN 
-                datawithMoreCertainNaN = errorToNaN().getDataWithCertainNaN(refinedData, self.CertainParam)
-                totalNanRowCount = datawithMoreCertainNaN.isnull().any(axis=1).sum()
+            refinedData, DataWithMoreNaN = self._getPreprocessedData(data)
+            self.refinedDataSet[ms_name] = refinedData
+            
+            if len(data)>0:  
+                totalNanRowCount = DataWithMoreNaN.isnull().any(axis=1).sum()
                 if totalNanRowCount < NanInfoForCleanData['totalNaNLimit']:
-                    consecutiveNanCountMap = datawithMoreCertainNaN.isnull().any(axis=1).astype(int).groupby(datawithMoreCertainNaN.notnull().any(axis=1).astype(int).cumsum()).cumsum()
+                    consecutiveNanCountMap = DataWithMoreNaN.isnull().any(axis=1).astype(int).groupby(DataWithMoreNaN.notnull().any(axis=1).astype(int).cumsum()).cumsum()
                     ConsecutiveNanLimitNum = NanInfoForCleanData['ConsecutiveNanLimit']
                     if (consecutiveNanCountMap > ConsecutiveNanLimitNum).any():
+                        
                         pass
                     else:
-                        imputedData = DataPreprocessing().get_imputedData(datawithMoreCertainNaN, self.imputation_param)
+                        imputedData = data_preprocessing.DataPreprocessing().get_imputedData(DataWithMoreNaN, self.imputation_param)
                         self.FilteredImputedDataSet[ms_name] = imputedData     
                      
         return self.refinedDataSet, self.FilteredImputedDataSet
@@ -205,11 +204,11 @@ class CleanFeatureData:
             MDP = data_preprocessing.DataPreprocessing()
             refined_data = MDP.get_refinedData(data, self.refine_param)
             from KETIPrePartialDataPreprocessing.error_detection.errorToNaN import errorToNaN 
-            datawithMoreCertainNaN = errorToNaN().getDataWithCertainNaN(refined_data, self.CertainParam)
-
+            datawithMoreCertainNaN = errorToNaN().getDataWithCertainNaN(refined_data, self.certainParam)
+        
         return refined_data, datawithMoreCertainNaN
 
-        
+                
     # self.query_start_time, self.query_end_time 문제 이슈
     def _setDataWithSameDuration(self, data, duration):
         # Make Data with Full Duration [query_start_time ~ query_end_time]
