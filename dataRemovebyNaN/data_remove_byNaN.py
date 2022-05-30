@@ -70,7 +70,6 @@ class DataRemoveByNaNStatus():
     
     def removeNaNDataByTotalNaNLimitNum(self, totalNanLimitNum, data):
         columnNaNCountSet = data.isnull().sum()
-        print(columnNaNCountSet)
         for column_name in data.columns:
             columnNaNCount = columnNaNCountSet[column_name]
             if totalNanLimitNum < columnNaNCount:
