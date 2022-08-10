@@ -10,15 +10,15 @@ from KETIPrePartialDataPreprocessing import data_preprocessing
 # - one dataFrame: getOneCleanDataSetByFeature
 
 class CleanFeatureData:
-    def __init__(self, feature_list, freq_min):
+    def __init__(self, feature_list, frequency):
         """
         """
         self.feature_list = feature_list
-        from datetime import timedelta
-        self.freq_min = freq_min
+        self.frequency = frequency
+
         self.refine_param = {
             "removeDuplication":{"flag":True},
-            "staticFrequency":{"flag":True, "frequency":self.freq_min}
+            "staticFrequency":{"flag":True, "frequency":frequency}
         }
         self.certainParam= {"flag":True}
 
@@ -219,8 +219,10 @@ class CleanFeatureData:
         if len(data)>0:
             #2. Make Full Data(query Start ~ end) with NaN
             data.index = data.index.tz_localize(None) # 지역정보 없이 시간대만 가져오기
-            new_idx = pd.date_range(start = start_time, end = (end_time- self.freq_min), freq = self.freq_min)
+            new_idx = pd.date_range(start = start_time, end = (end_time- self.frequency), freq = self.frequency)
             new_data = pd.DataFrame(index= new_idx)
             new_data.index.name ='time' 
             data = new_data.join(data) # new_data에 data를 덮어쓴다
         return data
+
+        
